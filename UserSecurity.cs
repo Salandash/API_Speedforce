@@ -8,13 +8,12 @@ namespace API_Speedforce
 {
     public class UserSecurity
     {
-
-        public static bool Login(string usename, string password)
+        public static bool Login(string username, string password)
         {
             using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
             {
                 entities.Configuration.ProxyCreationEnabled = false;
-                return entities.TB_Usuarios.Any(user => user.ID_Usuario.Equals(usename, StringComparison.OrdinalIgnoreCase) && user.Contraseña == password);
+                return entities.TB_Usuarios.Any(user => user.ID_Usuario.Equals(username, StringComparison.OrdinalIgnoreCase) && user.Contraseña == password);
             }
         }
     }

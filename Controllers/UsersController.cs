@@ -4,35 +4,51 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
+using System.Web.Http.Cors;
+using Microsoft.ApplicationInsights;
 using Speedforce_DataAccess;
 using System.Threading;
 using System.Security.Principal;
+using Newtonsoft.Json;
+using API_Speedforce.Models;
+
 
 namespace API_Speedforce.Controllers
 {
-    [BasicAuthentication]
+    [RoutePrefix("api/speedforce")]
     public class UsersController : ApiController
     {
-        
-        public List<TB_Usuarios> Get()
+
+        [Route("user/{userid}")]
+        [HttpGet]
+        public IHttpActionResult UserInfo(string userid)
         {
-            string username = Thread.CurrentPrincipal.Identity.Name;
+            User userModel = new User(userid);
 
-            using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
-            {
-                entities.Configuration.ProxyCreationEnabled = false;
-                return entities.TB_Usuarios.ToList();
-            }
+            var response = userModel.GetUser(userid);
 
+            if (response.IsComplete())
+                return Ok(response.Body);
+            else
+                return BadRequest(response.Message);
         }
 
-        public TB_Usuarios Get(string user)
+        [Route("loginA")]
+        [HttpPost]
+        public IHttpActionResult AthleteLogin (User model)
         {
-            using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
-            {
-                return entities.TB_Usuarios.FirstOrDefault(e => e.ID_Usuario == user);
-            }
-        }
+            User userModel = new User();
+            userModel.Username = model.Username;
+            userModel.Password = model.Password;
 
+            var response = userModel.VerifyLogin();
+
+            if (response.IsComplete())
+                return Ok(response.Body);
+            else
+                return BadRequest(response.Message);
+        }
     }
+
+  
 }
