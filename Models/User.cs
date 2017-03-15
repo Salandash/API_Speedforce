@@ -9,22 +9,49 @@ namespace API_Speedforce.Models
 {
     public class User
     {
-        public String Username { get; set; }
-        public String Password { get; set; }
-        public Int32 Role { get; set; }
-        public String Email { get; set; }
-
+        public string Email { get; set; }
+        public string Username { get; set; }
+        public string Password { get; set; }
+        public int Role { get; set; }
+        TB_Usuarios UserEntity { get; set; }
 
         public User() { }
 
         public User(string username)
         {
-            using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
+            try
             {
-                Username = entities.TB_Usuarios.Find(username).ID_Usuario;
-                Password = entities.TB_Usuarios.Find(username).Contraseña;
-                Role = entities.TB_Usuarios.Find(username).ID_Rol;
-                Email = entities.TB_Usuarios.Find(username).Email;
+                using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
+                {
+                    Email = entities.TB_Usuarios.Find(username).Email;
+                    Username = entities.TB_Usuarios.Find(username).ID_Usuario;
+                    Password = entities.TB_Usuarios.Find(username).Contraseña;
+                    Role = entities.TB_Usuarios.Find(username).ID_Rol;
+                    
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("---DB/Entity Problem---");
+                Console.WriteLine();
+                Console.WriteLine(ex);
+            }
+            
+        }
+
+        public void UpdateEntity()
+        {
+            UserEntity = new TB_Usuarios();
+            try
+            {
+                UserEntity.Email = this.Email;
+                UserEntity.Contraseña = this.Password;
+                UserEntity.ID_Rol = this.Role;
+                UserEntity.ID_Usuario = this.Username;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
             }
         }
 
@@ -75,6 +102,32 @@ namespace API_Speedforce.Models
             {
                 return result.Failed(ex);
             }
+        }
+
+        public OperationResponse<User> AddUser()
+        {
+            var result = new OperationResponse<User>();
+            try
+            {
+                using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
+                {
+                    if (! entities.TB_Usuarios.Any(cred => cred.ID_Usuario == Username))
+                    {
+                        UpdateEntity();
+                        entities.TB_Usuarios.Add(UserEntity);
+                        entities.SaveChanges();
+                        return result.Complete(this);
+                    }
+                    else
+                        return result.Failed("Usuario ya existe.");
+                    
+                }
+            }
+            catch (Exception ex)
+            {
+                return result.Failed(ex);
+            }
+            
         }
     }
 }
