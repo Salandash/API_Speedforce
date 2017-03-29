@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using Speedforce_DataAccess;
+using API_Speedforce.Business;
 
 namespace API_Speedforce.Models
 {
     public class TrainingSession
     {
-
+        #region Properties
         public String SessionID { get; set; }
         public String UserID { get; set; }
         public float AverageBPM { get; set; }
@@ -22,9 +23,10 @@ namespace API_Speedforce.Models
         public int TrainingTypeID { get; set; }
         public int SessionStatusID { get; set; }
         public int ClimateConditionID { get; set; }
-
         public TB_SesionEntrenamiento TrainingEntity { get; set; }
+        #endregion
 
+        #region Constructors
         public TrainingSession() { }
 
         public TrainingSession(string sessionID)
@@ -56,7 +58,78 @@ namespace API_Speedforce.Models
                 Console.WriteLine(ex);
             }
         }
+        #endregion
 
+        #region Main Methods
+        public OperationResponse<List<TrainingSession>> GetTrainingSessions(string userid)
+        {
+            var result = new OperationResponse<List<TrainingSession>>();
+
+            try
+            {
+                using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
+                {
+                    var query = entities.TB_SesionEntrenamiento.Where(cred => cred.ID_Usuario == userid);
+                    List<TrainingSession> trainingList = new List<TrainingSession>();
+
+                    foreach (var item in query)
+                    {
+                        trainingList.Add(new TrainingSession()
+                        {
+                            SessionID = item.ID_Sesion,
+                            RouteID = item.ID_Ruta,
+                            UserID = item.ID_Usuario,
+                            AverageBPM = (float)item.RitmoCardiacoMedio,
+                            BurntCalories = (float)item.CaloriasQuemadas,
+                            RelativeHumidity = (float)item.HumedadRelativa,
+                            Distance = (float)item.DistanciaRecorrida,
+                            StartTime = item.MomentoInicio,
+                            EndTime = item.MomentoInicio,
+                            Temperature = (float)item.Temperatura,
+                            ClimateConditionID = item.ID_Condicion,
+                            TrainingTypeID = item.ID_TipoEntrenamiento,
+                            SessionStatusID = item.ID_StatusSesion
+                        });
+
+                    }
+
+                    return result.Complete(trainingList);
+                }
+            }
+            catch (Exception ex)
+            {
+                return result.Failed(ex);
+            }
+
+        }
+        
+
+        public OperationResponse<TrainingSession> AddSession()
+        {
+            var result = new OperationResponse<TrainingSession>();
+            try
+            {
+                using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
+                {
+                    if (!entities.TB_SesionEntrenamiento.Any(cred => cred.ID_Sesion == SessionID))
+                    {
+                        UpdateEntity();
+                        entities.TB_SesionEntrenamiento.Add(TrainingEntity);
+                        entities.SaveChanges();
+                        return result.Complete(this);
+                    }
+                    else
+                        return result.Failed("Sesión de entrenamiento ya existe en el sistema.");
+                }
+            }
+            catch (Exception ex)
+            {
+                return result.Failed(ex);
+            }
+        }
+        #endregion
+
+        #region UtilityMethods
         public void UpdateEntity()
         {
             TrainingEntity = new TB_SesionEntrenamiento();
@@ -81,6 +154,85 @@ namespace API_Speedforce.Models
                 Console.WriteLine(ex);
             }
         }
+
+        public OperationResponse<TrainingSession> FindSavedSession(string userid)
+        {
+            var result = new OperationResponse<TrainingSession>();
+            try
+            {
+                using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
+                {
+                    
+                    var obj = entities.TB_SesionEntrenamiento.SingleOrDefault(cred => cred.ID_Usuario == userid && cred.ID_StatusSesion == 3).ID_Sesion;
+                    if (obj == null)
+                    {
+                        return result.Failed("No hay sesiones pendientes");
+                    }
+                    else
+                    {
+                        TrainingSession ts = new TrainingSession(obj);
+                        return result.Complete(ts);
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return result.Failed(ex);
+            }
+        }
+
         
+        public int GetSessionStatusID(string s)
+        {
+            try
+            {
+                using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
+                {
+                    int idvalue = entities.TB_StatusSesion.SingleOrDefault(cred => cred.DescripcionStatus == s).ID_StatusSesion;
+                    return idvalue;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return 0;
+            }
+        }
+
+        public int GetTrainingTypeID(string s)
+        {
+            try
+            {
+                using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
+                {
+                    int idvalue = entities.TB_TipoEntrenamiento.SingleOrDefault(cred => cred.DescripcionEntrenamiento == s).ID_TipoEntrenamiento;
+                    return idvalue;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return 0;
+            }
+        }
+
+        public int GetClimateConditionID(string s)
+        {
+            try
+            {
+                using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
+                {
+                    int idvalue = entities.TB_CondicionClimatica.SingleOrDefault(cred => cred.Clima == s).ID_Condicion;
+                    return idvalue;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return 0;
+            }
+        }
+        #endregion
     }
 }

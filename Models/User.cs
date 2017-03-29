@@ -9,12 +9,15 @@ namespace API_Speedforce.Models
 {
     public class User
     {
+        #region Properties
         public string Email { get; set; }
         public string Username { get; set; }
         public string Password { get; set; }
         public int Role { get; set; }
         TB_Usuarios UserEntity { get; set; }
+        #endregion
 
+        #region Constructors
         public User() { }
 
         public User(string username)
@@ -38,22 +41,9 @@ namespace API_Speedforce.Models
             }
             
         }
+        #endregion
 
-        public void UpdateEntity()
-        {
-            UserEntity = new TB_Usuarios();
-            try
-            {
-                UserEntity.Email = this.Email;
-                UserEntity.Contraseña = this.Password;
-                UserEntity.ID_Rol = this.Role;
-                UserEntity.ID_Usuario = this.Username;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex);
-            }
-        }
+        #region Main Methods
 
         public OperationResponse<User> GetUser(string username)
         {
@@ -74,7 +64,7 @@ namespace API_Speedforce.Models
 
                         return result.Complete(this);
                     }
-                    return result.Complete(this);
+                    return result.Failed("Usuario no encontrado.");
 
                 }
             }
@@ -129,5 +119,25 @@ namespace API_Speedforce.Models
             }
             
         }
+        #endregion
+
+        #region Utility Methods
+        public void UpdateEntity()
+        {
+            UserEntity = new TB_Usuarios();
+            try
+            {
+                UserEntity.Email = this.Email;
+                UserEntity.Contraseña = this.Password;
+                UserEntity.ID_Rol = this.Role;
+                UserEntity.ID_Usuario = this.Username;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+        }
+
+        #endregion
     }
 }

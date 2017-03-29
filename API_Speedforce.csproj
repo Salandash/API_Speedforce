@@ -169,6 +169,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Global.asax" />
+    <Content Include="Templates\ActivationEmail.html" />
     <Content Include="Web.config" />
     <Content Include="Metadata\deploymentTemplates\apiappconfig.azureresource.json" />
     <Content Include="packages.config" />
@@ -182,6 +183,7 @@
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="BasicAuthenticationAttribute.cs" />
     <Compile Include="Business\CryptoService.cs" />
+    <Compile Include="Business\MailService.cs" />
     <Compile Include="Business\OperationResponse.cs" />
     <Compile Include="Controllers\TrainingSessionController.cs" />
     <Compile Include="Controllers\UsersController.cs" />
