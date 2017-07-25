@@ -4,44 +4,39 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
+using API_Speedforce.Business;
+using API_Speedforce.Models;
 
 namespace API_Speedforce.Controllers
 {
+    /// <summary>
+    /// Controller that handles all requests related to Training Sessions.
+    /// </summary>
+    [RoutePrefix("api/values")]
     public class ValuesController : ApiController
     {
+        [Route("countries")]
+        [HttpGet]
+        public IHttpActionResult CountryList()
+        {
+            var response = Utility.GetCountryList();
 
-        static List<string> strings = new List<string>()
-        {
-            "value0", "value1", "value2"
-        };
-        // GET api/values
-        public IEnumerable<string> Get()
-        {
-            return strings;
+            if (response.IsComplete())
+                return Ok(response.Body);
+            else
+                return BadRequest(response.Message);
         }
 
-        // GET api/values/5
-        public string Get(int id)
+        [Route("cities/{country}")]
+        [HttpGet]
+        public IHttpActionResult CityList(string country)
         {
-            return strings[id];
-        }
+            var response = Utility.GetCityList(Utility.GetCountryID(country));
 
-        // POST api/values
-        public void Post([FromBody]string value)
-        {
-            strings.Add(value);
-        }
-
-        // PUT api/values/5
-        public void Put(int id, [FromBody]string value)
-        {
-            strings[id] = value;
-        }
-
-        // DELETE api/values/5
-        public void Delete(int id)
-        {
-            strings.RemoveAt(id);
+            if (response.IsComplete())
+                return Ok(response.Body);
+            else
+                return BadRequest(response.Message);
         }
     }
 }

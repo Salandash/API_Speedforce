@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<parameters>
+  <parameter name="ConnectionString-Web.config Connection String" description="ConnectionString Connection String used in web.config by the application to access the database." defaultValue="Server=tcp:speedforcerserver.database.windows.net,1433;Initial Catalog=DB_Speedforce;Persist Security Info=False;User ID=wjoseph;Password=Pitibole03#;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;" tags="SqlConnectionString">
+    <parameterEntry kind="XmlFile" scope="C:\\Users\\William\\documents\\visual\ studio\ 2015\\Projects\\API_Speedforce\\API_Speedforce\\obj\\Release\\Package\\PackageTmp\\Web\.config$" match="/configuration/connectionStrings/add[@name='ConnectionString']/@connectionString" />
+  </parameter>
+  <parameter name="DB_SpeedforceEntities-Web.config Connection String" description="DB_SpeedforceEntities Connection String used in web.config by the application to access the database." defaultValue="metadata=res://*/Speedforce_DataModel.csdl|res://*/Speedforce_DataModel.ssdl|res://*/Speedforce_DataModel.msl;provider=System.Data.SqlClient;provider connection string=&quot;data source=speedforcerserver.database.windows.net;initial catalog=DB_Speedforce;persist security info=True;user id=wjoseph;password=Pitibole03#;MultipleActiveResultSets=True;App=EntityFramework&quot;" tags="SqlConnectionString">
+    <parameterEntry kind="XmlFile" scope="C:\\Users\\William\\documents\\visual\ studio\ 2015\\Projects\\API_Speedforce\\API_Speedforce\\obj\\Release\\Package\\PackageTmp\\Web\.config$" match="/configuration/connectionStrings/add[@name='DB_SpeedforceEntities']/@connectionString" />
+  </parameter>
+</parameters>

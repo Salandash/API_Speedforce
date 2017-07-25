@@ -4,6 +4,7 @@ using System.Linq;
 using System.Web;
 using Speedforce_DataAccess;
 using API_Speedforce.Business;
+using System.Text;
 
 namespace API_Speedforce.Models
 {
@@ -12,14 +13,14 @@ namespace API_Speedforce.Models
         #region Properties
         public String SessionID { get; set; }
         public String UserID { get; set; }
-        public float AverageBPM { get; set; }
-        public float BurntCalories { get; set; }
+        public Double AverageBPM { get; set; }
+        public Double BurntCalories { get; set; }
         public String RouteID { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
-        public float Distance { get; set; }
-        public float RelativeHumidity { get; set; }
-        public float Temperature { get; set; }
+        public Double Distance { get; set; }
+        public Double RelativeHumidity { get; set; }
+        public Double Temperature { get; set; }
         public int TrainingTypeID { get; set; }
         public int SessionStatusID { get; set; }
         public int ClimateConditionID { get; set; }
@@ -33,21 +34,23 @@ namespace API_Speedforce.Models
         {
             try
             {
-                using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
+                using (DB_SpeedforceEntities entities = new DB_SpeedforceEntities())
                 {
-                    SessionID = entities.TB_SesionEntrenamiento.Find(sessionID).ID_Sesion;
-                    RouteID = entities.TB_SesionEntrenamiento.Find(sessionID).ID_Ruta;
-                    UserID = entities.TB_SesionEntrenamiento.Find(sessionID).ID_Sesion;
-                    AverageBPM = (float)entities.TB_SesionEntrenamiento.Find(sessionID).RitmoCardiacoMedio;
-                    BurntCalories = (float)entities.TB_SesionEntrenamiento.Find(sessionID).CaloriasQuemadas;
-                    RelativeHumidity = (float)entities.TB_SesionEntrenamiento.Find(sessionID).HumedadRelativa;
-                    Distance = (float)entities.TB_SesionEntrenamiento.Find(sessionID).DistanciaRecorrida;
-                    StartTime = entities.TB_SesionEntrenamiento.Find(sessionID).MomentoInicio;
-                    EndTime = entities.TB_SesionEntrenamiento.Find(sessionID).MomentoInicio;
-                    Temperature = (float)entities.TB_SesionEntrenamiento.Find(sessionID).Temperatura;
-                    ClimateConditionID = entities.TB_SesionEntrenamiento.Find(sessionID).ID_Condicion;
-                    TrainingTypeID = entities.TB_SesionEntrenamiento.Find(sessionID).ID_TipoEntrenamiento;
-                    SessionStatusID = entities.TB_SesionEntrenamiento.Find(sessionID).ID_StatusSesion;
+                    var obj = entities.TB_SesionEntrenamiento.Find(sessionID);
+
+                    SessionID = obj.ID_Sesion;
+                    RouteID = obj.ID_Ruta;
+                    UserID = obj.ID_Usuario;
+                    AverageBPM = Math.Round(obj.RitmoCardiacoMedio,2);
+                    BurntCalories = Math.Round(obj.CaloriasQuemadas,2);
+                    RelativeHumidity = Math.Round(obj.HumedadRelativa,2);
+                    Distance = Math.Round(obj.DistanciaRecorrida,2);
+                    StartTime = obj.MomentoInicio;
+                    EndTime = obj.MomentoInicio;
+                    Temperature = Math.Round(obj.Temperatura,2);
+                    ClimateConditionID = obj.ID_Condicion;
+                    TrainingTypeID = obj.ID_TipoEntrenamiento;
+                    SessionStatusID = obj.ID_StatusSesion;
 
                 }
             }
@@ -61,34 +64,37 @@ namespace API_Speedforce.Models
         #endregion
 
         #region Main Methods
-        public OperationResponse<List<TrainingSession>> GetTrainingSessions(string userid)
+        public OperationResponse<List<TrainingSessionModel>> GetTrainingSessions(string userid)
         {
-            var result = new OperationResponse<List<TrainingSession>>();
+            var result = new OperationResponse<List<TrainingSessionModel>>();
 
             try
             {
-                using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
+                using (DB_SpeedforceEntities entities = new DB_SpeedforceEntities())
                 {
                     var query = entities.TB_SesionEntrenamiento.Where(cred => cred.ID_Usuario == userid);
-                    List<TrainingSession> trainingList = new List<TrainingSession>();
+                    List<TrainingSessionModel> trainingList = new List<TrainingSessionModel>();
 
                     foreach (var item in query)
                     {
-                        trainingList.Add(new TrainingSession()
+                        trainingList.Add(new TrainingSessionModel()
                         {
                             SessionID = item.ID_Sesion,
                             RouteID = item.ID_Ruta,
                             UserID = item.ID_Usuario,
-                            AverageBPM = (float)item.RitmoCardiacoMedio,
-                            BurntCalories = (float)item.CaloriasQuemadas,
-                            RelativeHumidity = (float)item.HumedadRelativa,
-                            Distance = (float)item.DistanciaRecorrida,
+                            AverageBPM = Math.Round((double)item.RitmoCardiacoMedio, 2),
+                            BurntCalories = Math.Round((double)item.CaloriasQuemadas, 2),
+                            RelativeHumidity = Math.Round((double)item.HumedadRelativa, 2),
+                            Distance = Math.Round((double)item.DistanciaRecorrida, 2),
                             StartTime = item.MomentoInicio,
-                            EndTime = item.MomentoInicio,
-                            Temperature = (float)item.Temperatura,
-                            ClimateConditionID = item.ID_Condicion,
-                            TrainingTypeID = item.ID_TipoEntrenamiento,
-                            SessionStatusID = item.ID_StatusSesion
+                            EndTime = item.MomentoTermino,
+                            Temperature = Math.Round((double)item.Temperatura, 2),
+                            ClimateConditionID = Utility.GetClimateString(item.ID_Condicion),
+                            TrainingTypeID = Utility.GetTrainingTyeString(item.ID_TipoEntrenamiento),
+                            SessionStatusID = Utility.GetSessionStatusString(item.ID_StatusSesion),
+                            Duration = Utility.GetDuration(StartTime, EndTime),
+                            RouteName = item.TB_Rutas.NombreRuta
+                            
                         });
 
                     }
@@ -109,7 +115,7 @@ namespace API_Speedforce.Models
             var result = new OperationResponse<TrainingSession>();
             try
             {
-                using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
+                using (DB_SpeedforceEntities entities = new DB_SpeedforceEntities())
                 {
                     if (!entities.TB_SesionEntrenamiento.Any(cred => cred.ID_Sesion == SessionID))
                     {
@@ -119,7 +125,10 @@ namespace API_Speedforce.Models
                         return result.Complete(this);
                     }
                     else
-                        return result.Failed("Sesión de entrenamiento ya existe en el sistema.");
+                    {
+                        UpdateSession();
+                        return result.Complete(this);
+                    }
                 }
             }
             catch (Exception ex)
@@ -130,12 +139,18 @@ namespace API_Speedforce.Models
         #endregion
 
         #region UtilityMethods
+        /// <summary>
+        /// Add values to the Entity Framework Training Session Entity.
+        /// </summary>
         public void UpdateEntity()
         {
             TrainingEntity = new TB_SesionEntrenamiento();
 
             try
             {
+                if (this.SessionStatusID == 3)
+                    this.SessionStatusID = 2;
+
                 TrainingEntity.ID_Usuario = this.UserID;
                 TrainingEntity.CaloriasQuemadas = this.BurntCalories;
                 TrainingEntity.DistanciaRecorrida = this.Distance;
@@ -148,6 +163,7 @@ namespace API_Speedforce.Models
                 TrainingEntity.MomentoInicio = this.StartTime;
                 TrainingEntity.MomentoTermino = this.EndTime;
                 TrainingEntity.RitmoCardiacoMedio = this.AverageBPM;
+                TrainingEntity.Temperatura = this.Temperature;
             }
             catch (Exception ex)
             {
@@ -155,26 +171,34 @@ namespace API_Speedforce.Models
             }
         }
 
-        public OperationResponse<TrainingSession> FindSavedSession(string userid)
+        public OperationResponse<TrainingSession> AddSession(BIEntryModel model)
         {
             var result = new OperationResponse<TrainingSession>();
             try
             {
-                using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
+                using (DB_SpeedforceEntities entities = new DB_SpeedforceEntities())
                 {
-                    
-                    var obj = entities.TB_SesionEntrenamiento.SingleOrDefault(cred => cred.ID_Usuario == userid && cred.ID_StatusSesion == 3).ID_Sesion;
-                    if (obj == null)
-                    {
-                        return result.Failed("No hay sesiones pendientes");
-                    }
-                    else
-                    {
-                        TrainingSession ts = new TrainingSession(obj);
-                        return result.Complete(ts);
-                    }
-                }
 
+                    this.SessionID = System.Guid.NewGuid().ToString();
+                    this.UserID = model.UserID;
+                    this.RouteID = model.RouteID;
+                    this.AverageBPM = 0;
+                    this.BurntCalories = 0;
+                    this.ClimateConditionID = 1;
+                    this.Distance = 0;
+                    this.EndTime = DateTime.Now;
+                    this.StartTime = DateTime.Now;
+                    this.Temperature = 0;
+                    this.TrainingTypeID = 1;
+                    this.SessionStatusID = 1;
+                    this.RelativeHumidity = 0;
+
+
+                    UpdateEntity();
+                    entities.Entry(TrainingEntity).State = System.Data.Entity.EntityState.Added;
+                    entities.SaveChanges();
+                    return result.Complete(this);
+                }
             }
             catch (Exception ex)
             {
@@ -182,55 +206,84 @@ namespace API_Speedforce.Models
             }
         }
 
-        
-        public int GetSessionStatusID(string s)
+        /// <summary>
+        /// Method to find a Training Session with the "Pending" state.
+        /// </summary>
+        /// <param name="userid"></param>
+        public TrainingSession FindSavedSession(string userid)
         {
             try
             {
-                using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
+                using (DB_SpeedforceEntities entities = new DB_SpeedforceEntities())
                 {
-                    int idvalue = entities.TB_StatusSesion.SingleOrDefault(cred => cred.DescripcionStatus == s).ID_StatusSesion;
-                    return idvalue;
+                    var obj = entities.TB_SesionEntrenamiento.SingleOrDefault(cred => cred.ID_Usuario == userid && cred.ID_StatusSesion == 1);
+
+                    SessionID = obj.ID_Sesion;
+                    RouteID = obj.ID_Ruta;
+                    
+                    UserID = obj.ID_Usuario;
+                    AverageBPM = obj.RitmoCardiacoMedio;
+                    BurntCalories = obj.CaloriasQuemadas;
+                    RelativeHumidity = obj.HumedadRelativa;
+                    Distance = obj.DistanciaRecorrida;
+                    StartTime = obj.MomentoInicio;
+                    EndTime = obj.MomentoInicio;
+                    Temperature = obj.Temperatura;
+                    ClimateConditionID = obj.ID_Condicion;
+                    TrainingTypeID = obj.ID_TipoEntrenamiento;
+                    SessionStatusID = 2;
+
+                    UpdateSession();
+
+                    return this;
+
                 }
+
             }
             catch (Exception ex)
             {
+                Console.WriteLine("---DB/Entity Problem---");
+                Console.WriteLine();
                 Console.WriteLine(ex);
-                return 0;
+                return this;
             }
+
         }
 
-        public int GetTrainingTypeID(string s)
+        public void UpdateSession()
         {
             try
             {
-                using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
+                using (DB_SpeedforceEntities entities = new DB_SpeedforceEntities())
                 {
-                    int idvalue = entities.TB_TipoEntrenamiento.SingleOrDefault(cred => cred.DescripcionEntrenamiento == s).ID_TipoEntrenamiento;
-                    return idvalue;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex);
-                return 0;
-            }
-        }
+                    var obj = entities.TB_SesionEntrenamiento.SingleOrDefault(cred => cred.ID_Sesion == SessionID);
+                    if (obj != null)
+                    {
+                        obj.CaloriasQuemadas = this.BurntCalories;
+                        obj.HumedadRelativa = this.RelativeHumidity;
+                        obj.ID_Ruta = this.RouteID;
+                        obj.ID_Sesion = this.SessionID;
+                        obj.ID_Condicion = this.ClimateConditionID;
+                        obj.ID_StatusSesion = this.SessionStatusID;
+                        obj.ID_TipoEntrenamiento = this.TrainingTypeID;
+                        obj.ID_Usuario = this.UserID;
+                        obj.MomentoInicio = this.StartTime;
+                        obj.MomentoTermino = this.EndTime;
+                        obj.RitmoCardiacoMedio = this.AverageBPM;
+                        obj.DistanciaRecorrida = this.Distance;
+                        obj.Temperatura = this.Temperature;
 
-        public int GetClimateConditionID(string s)
-        {
-            try
-            {
-                using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
-                {
-                    int idvalue = entities.TB_CondicionClimatica.SingleOrDefault(cred => cred.Clima == s).ID_Condicion;
-                    return idvalue;
+                        entities.SaveChanges();
+                        UpdateEntity();
+                        entities.TB_SesionEntrenamiento.Add(TrainingEntity);
+                        entities.SaveChanges();
+                    }
+
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
-                return 0;
+                Console.WriteLine(ex.Message);
             }
         }
         #endregion

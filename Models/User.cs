@@ -24,12 +24,14 @@ namespace API_Speedforce.Models
         {
             try
             {
-                using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
+                using (DB_SpeedforceEntities entities = new DB_SpeedforceEntities())
                 {
-                    Email = entities.TB_Usuarios.Find(username).Email;
-                    Username = entities.TB_Usuarios.Find(username).ID_Usuario;
-                    Password = entities.TB_Usuarios.Find(username).Contraseña;
-                    Role = entities.TB_Usuarios.Find(username).ID_Rol;
+                    var obj = entities.TB_Usuarios.Find(username);
+
+                    Email = obj.Email;
+                    Username = obj.ID_Usuario;
+                    Password = obj.Contraseña;
+                    Role = obj.ID_Rol;
                     
                 }
             }
@@ -44,14 +46,17 @@ namespace API_Speedforce.Models
         #endregion
 
         #region Main Methods
-
+        /// <summary>
+        /// Method that update an the objects data according to an existing user.
+        /// </summary>
+        /// <param name="username">The username of the searched User</param>
         public OperationResponse<User> GetUser(string username)
         {
             var result = new OperationResponse<User>();
 
             try
             {
-                using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
+                using (DB_SpeedforceEntities entities = new DB_SpeedforceEntities())
                 {
 
                     var requestedUser = entities.TB_Usuarios.Find(username);
@@ -79,7 +84,7 @@ namespace API_Speedforce.Models
             var result = new OperationResponse<User>();
             try
             {
-                using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
+                using (DB_SpeedforceEntities entities = new DB_SpeedforceEntities())
                 {
                     if (entities.TB_Usuarios.Any(cred => cred.ID_Usuario
                             == this.Username && cred.Contraseña == this.Password))
@@ -94,17 +99,20 @@ namespace API_Speedforce.Models
             }
         }
 
+        /// <summary>
+        /// Method that adds an user into the DB
+        /// </summary>
         public OperationResponse<User> AddUser()
         {
             var result = new OperationResponse<User>();
             try
             {
-                using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
+                using (DB_SpeedforceEntities entities = new DB_SpeedforceEntities())
                 {
                     if (! entities.TB_Usuarios.Any(cred => cred.ID_Usuario == Username))
                     {
                         UpdateEntity();
-                        entities.TB_Usuarios.Add(UserEntity);
+                        entities.Entry(UserEntity).State = System.Data.Entity.EntityState.Added;
                         entities.SaveChanges();
                         return result.Complete(this);
                     }
@@ -122,6 +130,9 @@ namespace API_Speedforce.Models
         #endregion
 
         #region Utility Methods
+        /// <summary>
+        /// Method to Update the valuo of the EF's Entity object
+        /// </summary>
         public void UpdateEntity()
         {
             UserEntity = new TB_Usuarios();
@@ -137,7 +148,6 @@ namespace API_Speedforce.Models
                 Console.WriteLine(ex);
             }
         }
-
         #endregion
     }
 }

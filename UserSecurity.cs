@@ -10,7 +10,7 @@ namespace API_Speedforce
     {
         public static bool Login(string username, string password)
         {
-            using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
+            using (DB_SpeedforceEntities entities = new DB_SpeedforceEntities())
             {
                 entities.Configuration.ProxyCreationEnabled = false;
                 return entities.TB_Usuarios.Any(user => user.ID_Usuario.Equals(username, StringComparison.OrdinalIgnoreCase) && user.Contraseña == password);

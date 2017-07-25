@@ -16,8 +16,7 @@ namespace API_Speedforce.Models
         public String Name { get; set; }
         public String LastName { get; set; }
         public DateTime BirthDate { get; set; }
-        public String CityName { get; set; }
-        public String CountryName { get; set; }
+        public Int32 CityID { get; set; }
         public String TelephoneNumber { get; set; }
         public String Photo { get; set; }
         public TB_Personas PersonEntity { get; set; }
@@ -30,14 +29,13 @@ namespace API_Speedforce.Models
         {
             try
             {
-                using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
+                using (DB_SpeedforceEntities entities = new DB_SpeedforceEntities())
                 {
                     Email = entities.TB_Personas.Find(email).Email;
                     Name = entities.TB_Personas.Find(email).Nombre;
                     LastName = entities.TB_Personas.Find(email).Apellidos;
                     Sex = entities.TB_Personas.Find(email).ID_Sexo;
-                    CityName = entities.TB_Personas.Find(email).NombreCiudad;
-                    CountryName = entities.TB_Personas.Find(email).NombrePais;
+                    CityID = entities.TB_Personas.Find(email).ID_Ciudad;
                     BirthDate = entities.TB_Personas.Find(email).FechaNacimiento;
                     TelephoneNumber = entities.TB_Personas.Find(email).NumeroTelefono;
 
@@ -55,16 +53,16 @@ namespace API_Speedforce.Models
         #endregion
 
         #region Main Methods
-        public OperationResponse<Person> GetPerson(string userid)
+        public OperationResponse<Person> GetPerson(string email)
         {
             var result = new OperationResponse<Person>();
 
             try
             {
-                using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
+                using (DB_SpeedforceEntities entities = new DB_SpeedforceEntities())
                 {
 
-                    var requestedUser = entities.TB_Personas.Find(userid);
+                    var requestedUser = entities.TB_Personas.Find(email);
                     if (requestedUser != null)
                     {
                         Email = requestedUser.Email;
@@ -72,8 +70,7 @@ namespace API_Speedforce.Models
                         LastName = requestedUser.Apellidos;
                         BirthDate = requestedUser.FechaNacimiento;
                         Sex = requestedUser.ID_Sexo;
-                        CityName = requestedUser.NombreCiudad;
-                        CountryName = requestedUser.NombrePais;
+                        CityID = requestedUser.ID_Ciudad;
                         TelephoneNumber = requestedUser.NumeroTelefono;
 
                         return result.Complete(this);
@@ -93,7 +90,7 @@ namespace API_Speedforce.Models
             var result = new OperationResponse<Person>();
             try
             {
-                using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
+                using (DB_SpeedforceEntities entities = new DB_SpeedforceEntities())
                 {
                     if (!entities.TB_Personas.Any(cred => cred.Email == this.Email))
                     {
@@ -119,16 +116,16 @@ namespace API_Speedforce.Models
             var result = new OperationResponse<Person>();
             try
             {
-                using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
+                using (DB_SpeedforceEntities entities = new DB_SpeedforceEntities())
                 {
                     var obj = entities.TB_Personas.SingleOrDefault(cred => cred.Email == Email);
                     if (obj != null)
                     {
+                        obj.Email = Email;
                         obj.Apellidos = LastName;
                         obj.ID_Sexo = Sex;
                         obj.Nombre = Name;
-                        obj.NombreCiudad = CityName;
-                        obj.NombrePais = CountryName;
+                        obj.ID_Ciudad = CityID;
                         obj.NumeroTelefono = TelephoneNumber;
                         obj.FechaNacimiento = BirthDate;
 
@@ -152,11 +149,10 @@ namespace API_Speedforce.Models
             var result = new OperationResponse<String>();
             try
             {
-                using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
+                using (DB_SpeedforceEntities entities = new DB_SpeedforceEntities())
                 {
-                    Photo = Encoding.ASCII.GetString(entities.TB_Personas.SingleOrDefault(cred => cred.Email == Email).Foto);
-                    return result.Complete(System.Convert.ToBase64String
-                        (entities.TB_Personas.SingleOrDefault(cred => cred.Email == Email).Foto));
+                    Photo = entities.TB_Personas.SingleOrDefault(cred => cred.Email == Email).Foto;
+                    return result.Complete(entities.TB_Personas.SingleOrDefault(cred => cred.Email == Email).Foto);
                 }
             }
             catch (Exception ex)
@@ -170,12 +166,12 @@ namespace API_Speedforce.Models
             var result = new OperationResponse<bool>();
             try
             {
-                using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
+                using (DB_SpeedforceEntities entities = new DB_SpeedforceEntities())
                 {
                     var obj = entities.TB_Personas.SingleOrDefault(cred => cred.Email == Email);
                     if (obj != null)
                     {
-                        obj.Foto = System.Convert.FromBase64String(s);
+                        obj.Foto = s;
                         return result.Complete(true);
                     }
                     return result.Failed("No se encontró usuario");
@@ -190,22 +186,6 @@ namespace API_Speedforce.Models
         #endregion
 
         #region Utility Methods
-        public int GetSexID(string s)
-        {
-            try
-            {
-                using (DB_SpeedForceEntities entities = new DB_SpeedForceEntities())
-                {
-                    int idvalue = entities.TB_Sexo.SingleOrDefault(cred => cred.Descripcion == s).ID_Sexo;
-                    return idvalue;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex);
-                return 0;
-            }
-        }
 
         public void UpdateEntity()
         {
@@ -218,8 +198,7 @@ namespace API_Speedforce.Models
                 PersonEntity.Email = this.Email;
                 PersonEntity.FechaNacimiento = this.BirthDate.Date;
                 PersonEntity.ID_Sexo = this.Sex;
-                PersonEntity.NombreCiudad = this.CityName;
-                PersonEntity.NombrePais = this.CountryName;
+                PersonEntity.ID_Ciudad = this.CityID;
                 PersonEntity.NumeroTelefono = this.TelephoneNumber;
             }
             catch (Exception ex)
